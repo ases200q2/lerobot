@@ -163,6 +163,14 @@ wandb/
 # Dev scripts
 .dev/
 
+# Sync scripts (personal development tools)
+sync_upstream.sh
+sync_main.sh
+update.sh
+cleanup_remote.sh
+SYNC_README.md
+SIMPLE_SYNC_README.md
+
 # Data folders
 data/
 outputs/
