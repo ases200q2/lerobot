@@ -185,3 +185,6 @@ outputs/
 *.urdf
 *.xml
 *.part
+
+# Local optional modules
+gym-hil/
