@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python:*)",
+      "Bash(lerobot-info)",
+      "Bash(echo:*)",
+      "Bash(source:*)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "WebSearch",
+      "WebFetch(domain:github.com)",
+      "Read(//home/cihan/lerobot-dev/**)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

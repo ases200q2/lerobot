@@ -6,8 +6,14 @@
 
 set -e  # Exit on any error
 
-# Force PyAV video backend to avoid torchcodec issues
-export LEROBOT_VIDEO_BACKEND=pyav
+# =============================================================================
+# UTILITY FUNCTIONS
+# =============================================================================
+
+# Generate current date and time in YYYYMMDD_HHMMSS format
+get_current_date() {
+    date +"%Y%m%d_%H%M%S"
+}
 
 # =============================================================================
 # DATASET VISUALIZATION
@@ -18,7 +24,7 @@ echo "=== Dataset Visualization Commands ==="
 # Visualize gamepad grasp dataset
 visualize_gamepad_dataset() {
     echo "Visualizing gamepad grasp dataset..."
-    python -m lerobot.scripts.visualize_dataset_html --repo-id ases200q2/test_gamepad_grasp
+    python3 -m lerobot.scripts.visualize_dataset_html --repo-id ases200q2/test_gamepad_grasp
 }
 
 # Visualize any dataset with custom repo ID
@@ -30,7 +36,7 @@ visualize_dataset() {
     fi
     local repo_id=$1
     echo "Visualizing dataset: $repo_id"
-    python -m lerobot.scripts.visualize_dataset_html --repo-id "$repo_id"
+    python3 -m lerobot.scripts.visualize_dataset_html --repo-id "$repo_id"
 }
 
 # =============================================================================
@@ -43,19 +49,19 @@ echo "=== Policy Evaluation Commands ==="
 eval_policy_with_config() {
     local config_path=${1:-"lerobot-example-config-files/eval_config_gym_hil.json"}
     echo "Evaluating policy with config: $config_path"
-    python -m lerobot.scripts.eval --config_path="$config_path"
+    python3 -m lerobot.scripts.eval --config_path="$config_path"
 }
 
 # Evaluate SmolVLA model on dataset
 eval_smolvla_model() {
-    local checkpoint=${1:-"ases200q2/PandaPickCubeSpacemouseRandom2_smolvla"}
+    local checkpoint=${1:-"ases200q2/PandaPickCubeSpacemouseRandom2_v30_smolvla"}
     local device=${2:-"cuda:0"}
     local num_episodes=${3:-5}
     echo "Evaluating SmolVLA model..."
     echo "Checkpoint: $checkpoint"
     echo "Device: $device"
     echo "Episodes: $num_episodes"
-    python EVALUATE/evaluate_smolvla_model.py \
+    python3 EVALUATE/evaluate_smolvla_model.py \
         --checkpoint "$checkpoint" \
         --device "$device" \
         --num-episodes "$num_episodes"
@@ -64,14 +70,14 @@ eval_smolvla_model() {
 
 # Evaluate SmolVLA model on simulation
 eval_smolvla_simulation() {
-    local checkpoint=${1:-"ases200q2/PandaPickCubeSpacemouseRandom2_smolvla_HM"}
+    local checkpoint=${1:-"ases200q2/PandaPickCubeSpacemouseRandom2_v30_smolvla"}
     local device=${2:-"cuda:0"}
     local num_episodes=${3:-5}
     echo "Evaluating SmolVLA model..."
     echo "Checkpoint: $checkpoint"
     echo "Device: $device"
     echo "Episodes: $num_episodes"
-    python EVALUATE/evaluate_smolvla_simulation.py \
+    python3 EVALUATE/evaluate_smolvla_simulation.py \
         --checkpoint "$checkpoint" \
         --device "$device" \
         --num-episodes "$num_episodes"
@@ -85,14 +91,14 @@ eval_smolvla_simulation() {
 
 # Evaluate ACT model in simulation
 eval_act_simulation() {
-    local checkpoint=${1:-"ases200q2/PandaPickCubeSpacemouseRandom2_ACT_pluto_20251022_092402"}
+    local checkpoint=${1:-"ases200q2/PandaPickCubeSpacemouseRandom2_v30_ACT"}
     local device=${2:-"cuda:0"}
     local num_episodes=${3:-5}
     echo "Evaluating ACT model in simulation..."
     echo "Checkpoint: $checkpoint"
     echo "Device: $device"
     echo "Episodes: $num_episodes"
-    python EVALUATE/evaluate_act_simulation.py \
+    python3 EVALUATE/evaluate_act_simulation.py \
         --checkpoint "$checkpoint" \
         --device "$device" \
         --num-episodes "$num_episodes"
@@ -100,14 +106,14 @@ eval_act_simulation() {
 
 # Evaluate ACT model on dataset
 eval_act_model() {
-    local checkpoint=${1:-"ases200q2/PandaPickCubeSpacemouseRandom2_ACT"}
+    local checkpoint=${1:-"ases200q2/PandaPickCubeSpacemouseRandom2_v30_ACT"}
     local device=${2:-"cuda:0"}
     local num_episodes=${3:-5}
     echo "Evaluating ACT model on dataset..."
     echo "Checkpoint: $checkpoint"
     echo "Device: $device"
     echo "Episodes: $num_episodes"
-    python EVALUATE/evaluate_act_model.py \
+    python3 EVALUATE/evaluate_act_model.py \
         --checkpoint "$checkpoint" \
         --device "$device" \
         --num-episodes "$num_episodes"
@@ -122,111 +128,74 @@ echo "=== Model Training Commands ==="
 # Train SmolVLA model
 train_smolvla() {
     local dataset_id=${1:-"ases200q2/PandaPickCubeSpacemouseRandom2_v30"}
-    local date_suffix=$(date +"%Y%m%d_%H%M%S")
-    local output_dir=${2:-"outputs/train/PandaPickCubeSpacemouseRandom2_smolvla_Pluto_$date_suffix"}
-    local job_name=${3:-"PandaPickCubeSpacemouseRandom2_smolvla_Pluto_$date_suffix"}
-    local steps=${4:-100000}
+    local current_date=$(get_current_date)
+    local output_dir=${2:-"outputs/train/PandaPickCubeSpacemouseRandom2_v30_smolvla_HM_${current_date}"}
+    local job_name=${3:-"PandaPickCubeSpacemouseRandom2_v30_smolvla_HM_${current_date}"}
+    local steps=${4:-50000}
     local batch_size=${5:-32}
     local repo_id=${6:-"ases200q2/$job_name"}
 
     echo "Training SmolVLA model..."
     echo "Dataset: $dataset_id"
     echo "Output: $output_dir"
-    echo "Job name: $job_name"
     echo "Steps: $steps"
     echo "Batch size: $batch_size"
 
-    python -m lerobot.scripts.lerobot_train \
+    python3 -m lerobot.scripts.lerobot_train \
         --policy.path=lerobot/smolvla_base \
         --dataset.repo_id="$dataset_id" \
-        --dataset.video_backend=pyav \
         --batch_size="$batch_size" \
         --steps="$steps" \
         --output_dir="$output_dir" \
         --job_name="$job_name" \
         --policy.device=cuda \
         --wandb.enable=true \
-        --policy.repo_id="$repo_id"
+        --policy.repo_id="$repo_id" \
+        --dataset.video_backend=pyav
 }
 
-# Train ACT model - Dataset 1
 
 
 # Train ACT model - Dataset 2
 train_act() {
     local dataset_id=${1:-"ases200q2/PandaPickCubeSpacemouseRandom2_v30"}
-    local date_suffix=$(date +"%Y%m%d_%H%M%S")
-    local output_dir=${2:-"outputs/train/PandaPickCubeSpacemouseRandom2_ACT_pluto_$date_suffix"}
-    local job_name=${3:-"PandaPickCubeSpacemouseRandom2_ACT_pluto_$date_suffix"}
+    local current_date=$(get_current_date)
+    local output_dir=${2:-"outputs/train/PandaPickCubeSpacemouseRandom2_v30_ACT_HM_${current_date}"}
+    local job_name=${3:-"PandaPickCubeSpacemouseRandom2_v30_ACT_HM_${current_date}"}
     local steps=${4:-20000}
     local batch_size=${5:-32}
 
     echo "Training ACT model on dataset: $dataset_id"
     echo "Output: $output_dir"
-    echo "Job name: $job_name"
     echo "Steps: $steps"
     echo "Batch size: $batch_size"
 
-    python -m lerobot.scripts.lerobot_train \
+    python3 -m lerobot.scripts.lerobot_train \
         --dataset.repo_id="$dataset_id" \
-        --dataset.video_backend=pyav \
         --policy.type=act \
         --output_dir="$output_dir" \
         --job_name="$job_name" \
         --policy.device=cuda \
         --wandb.enable=true \
-        --policy.repo_id="$job_name" \
+        --policy.repo_id="ases200q2/$job_name" \
         --batch_size="$batch_size" \
-        --steps="$steps"
-}
-
-# Train Pi0 model
-train_pi0() {
-    local dataset_id=${1:-"ases200q2/PandaPickCubeSpacemouseRandom2_v30"}
-    local date_suffix=$(date +"%Y%m%d_%H%M%S")
-    local output_dir=${2:-"outputs/train/PandaPickCubeSpacemouseRandom2_pi0_pluto_$date_suffix"}
-    local job_name=${3:-"PandaPickCubeSpacemouseRandom2_pi0_pluto_$date_suffix"}
-    local steps=${4:-50000}
-    local batch_size=${5:-1}
-    local pretrained_path=${6:-"lerobot/pi0_base"}
-    local repo_id=${7:-"ases200q2/$job_name"}
-
-    echo "Training Pi0 model..."
-    echo "Dataset: $dataset_id"
-    echo "Output: $output_dir"
-    echo "Job name: $job_name"
-    echo "Steps: $steps"
-    echo "Batch size: $batch_size"
-    echo "Pretrained: $pretrained_path"
-
-    python -m lerobot.scripts.lerobot_train \
-        --dataset.repo_id="$dataset_id" \
-        --dataset.video_backend=pyav \
-        --policy.type=pi0 \
-        --output_dir="$output_dir" \
-        --job_name="$job_name" \
-        --policy.pretrained_path="$pretrained_path" \
-        --policy.repo_id="$repo_id" \
-        --policy.compile_model=true \
-        --policy.gradient_checkpointing=true \
-        --policy.dtype=bfloat16 \
-        --policy.device=cuda \
-        --wandb.enable=true \
-        --batch_size="$batch_size" \
-        --steps="$steps"
+        --steps="$steps" \
+        --dataset.video_backend=pyav
 }
 
 # Train any policy with custom parameters
 train_custom() {
-    if [ $# -lt 3 ]; then
-        echo "Usage: train_custom <policy_type> <dataset_id> <output_dir> [steps] [batch_size]"
+    if [ $# -lt 2 ]; then
+        echo "Usage: train_custom <policy_type> <dataset_id> [output_dir] [steps] [batch_size]"
         echo "Example: train_custom act ases200q2/my_dataset outputs/train/my_model 5000 32"
+        echo "If output_dir is not provided, it will be auto-generated with timestamp"
         return 1
     fi
 
     local policy_type=$1
     local dataset_id=$2
-    local output_dir=$3
+    local current_date=$(get_current_date)
+    local output_dir=${3:-"outputs/train/${policy_type}_HM_${current_date}"}
     local steps=${4:-5000}
     local batch_size=${5:-32}
     local job_name=$(basename "$output_dir")
@@ -237,9 +206,8 @@ train_custom() {
     echo "Steps: $steps"
     echo "Batch size: $batch_size"
 
-    python -m lerobot.scripts.lerobot_train \
+    python3 -m lerobot.scripts.lerobot_train \
         --dataset.repo_id="$dataset_id" \
-        --dataset.video_backend=pyav \
         --policy.type="$policy_type" \
         --output_dir="$output_dir" \
         --job_name="$job_name" \
@@ -247,7 +215,8 @@ train_custom() {
         --wandb.enable=true \
         --policy.repo_id="$dataset_id" \
         --batch_size="$batch_size" \
-        --steps="$steps"
+        --steps="$steps" \
+        --dataset.video_backend=pyav
 }
 
 # =============================================================================
@@ -261,7 +230,7 @@ collect_data_gym() {
     local config_path=${1:-"lerobot-example-config-files/env_config_gym_hil_il.json"}
     echo "Collecting data with gym manipulator..."
     echo "Config: $config_path"
-    python -m lerobot.scripts.rl.gym_manipulator --config_path "$config_path"
+    python3 -m lerobot.scripts.rl.gym_manipulator --config_path "$config_path"
 }
 
 # Collect data with spacemouse random config
@@ -269,7 +238,7 @@ collect_data_spacemouse_random() {
     local config_path=${1:-"lerobot-example-config-files/env_config_gym_hil_il_spacemouse_random.json"}
     echo "Collecting data with spacemouse random config..."
     echo "Config: $config_path"
-    python -m lerobot.scripts.rl.gym_manipulator --config_path "$config_path"
+    python3 -m lerobot.scripts.rl.gym_manipulator --config_path "$config_path"
 }
 
 # Collect data with spacemouse no viewer
@@ -277,7 +246,7 @@ collect_data_spacemouse_no_viewer() {
     local config_path=${1:-"lerobot-example-config-files/env_config_gym_hil_il_spacemouse_no_viewer.json"}
     echo "Collecting data with spacemouse (no viewer)..."
     echo "Config: $config_path"
-    python -m lerobot.scripts.rl.gym_manipulator --config_path "$config_path"
+    python3 -m lerobot.scripts.rl.gym_manipulator --config_path "$config_path"
 }
 
 # =============================================================================
@@ -289,13 +258,13 @@ echo "=== Utility Commands ==="
 # Display system information
 show_sys_info() {
     echo "Displaying system information..."
-    python -m lerobot.scripts.display_sys_info
+    python3 -m lerobot.scripts.display_sys_info
 }
 
 # Find joint limits
 find_joint_limits() {
     echo "Finding joint limits..."
-    python -m lerobot.scripts.find_joint_limits
+    python3 -m lerobot.scripts.find_joint_limits
 }
 
 # Crop dataset ROI
@@ -310,7 +279,7 @@ crop_dataset_roi() {
     echo "Cropping dataset ROI..."
     echo "Input: $input_dataset"
     echo "Output: $output_dataset"
-    python -m lerobot.scripts.rl.crop_dataset_roi \
+    python3 -m lerobot.scripts.rl.crop_dataset_roi \
         --input_dataset "$input_dataset" \
         --output_dataset "$output_dataset"
 }
@@ -335,8 +304,8 @@ show_help() {
     echo ""
     echo "🚀 MODEL TRAINING:"
     echo "  train_smolvla [dataset] [output] [job] [steps] [batch] [repo_id] - Train SmolVLA model"
-    echo "  train_act [dataset] [output] [job] [steps] [batch] - Train ACT model"
-    echo "  train_pi0 [dataset] [output] [job] [steps] [batch] [pretrained] [repo_id] - Train Pi0 model"
+    echo "  train_act_dataset1 [dataset] [output] [job] [steps] [batch] - Train ACT on dataset 1"
+    echo "  train_act_dataset2 [dataset] [output] [job] [steps] [batch] - Train ACT on dataset 2"
     echo "  train_custom <type> <dataset> <output> [steps] [batch] - Train custom policy"
     echo ""
     echo " DATA COLLECTION:"
