@@ -8,7 +8,8 @@
       "WebFetch(domain:raw.githubusercontent.com)",
       "WebSearch",
       "WebFetch(domain:github.com)",
-      "Read(//home/cihan/lerobot-dev/**)"
+      "Read(//home/cihan/lerobot-dev/**)",
+      "Bash(chmod:*)"
     ],
     "deny": [],
     "ask": []
