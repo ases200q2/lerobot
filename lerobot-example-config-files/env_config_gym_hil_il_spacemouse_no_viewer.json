@@ -1,0 +1,35 @@
+{
+    "type": "hil",
+    "task": "PandaPickCubeSpacemouse-v0",
+    "fps": 10,
+    "random_block_position": true,
+    "use_viewer": false,
+    "features": {
+        "use_robot_state": true,
+        "observation_keys": [
+            "pixels"
+        ]
+    },
+    "recording": {
+        "record": true,
+        "video": true,
+        "images": true,
+        "use_arm_action": true,
+        "recorded_actions": [
+            "action"
+        ]
+    },
+    "wrapper": {
+        "use_gripper": true,
+        "gripper_penalty": -0.05
+    },
+    "dataset": {
+        "repo_id": "PandaPickCubeSpacemouseNoViewer",
+        "image_transforms": [],
+        "delta_timestamps": [
+            -0.02,
+            0.0,
+            0.02
+        ]
+    }
+}

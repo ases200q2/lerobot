@@ -1,0 +1,64 @@
+{
+    "env": {
+        "name": "gym_hil",
+        "task": "PandaPickCubeSpacemouse-v0",
+        "fps": 10,
+        "features": {
+            "observation.images.front": {
+                "type": "VISUAL",
+                "shape": [3, 128, 128]
+            },
+            "observation.images.wrist": {
+                "type": "VISUAL",
+                "shape": [3, 128, 128]
+            },
+            "observation.state": {
+                "type": "STATE",
+                "shape": [18]
+            },
+            "action": {
+                "type": "ACTION",
+                "shape": [4]
+            }
+        },
+        "features_map": {
+            "observation.images.front": "observation.images.front",
+            "observation.images.wrist": "observation.images.wrist",
+            "observation.state": "observation.state",
+            "action": "action"
+        },
+        "processor": {
+            "control_mode": "spacemouse",
+            "gripper": {
+                "use_gripper": true,
+                "gripper_penalty": -0.02
+            },
+            "observation": {
+                "display_cameras": true,
+                "add_joint_velocity_to_observation": true
+            },
+            "image_preprocessing": {
+                "crop_params_dict": {
+                    "observation.images.front": [0, 0, 128, 128],
+                    "observation.images.wrist": [0, 0, 128, 128]
+                },
+                "resize_size": [128, 128]
+            },
+            "reset": {
+                "fixed_reset_joint_positions": [0.0, 0.195, 0.0, -2.43, 0.0, 2.62, 0.785],
+                "reset_time_s": 20.0,
+                "control_time_s": 20.0
+            }
+        }
+    },
+    "dataset": {
+        "repo_id": "PandaPickCubeSpacemouseRandom3_v30",
+        "task": "PandaPickCubeBase-v0",
+        "root": null,
+        "num_episodes_to_record": 50,
+        "replay_episode": null,
+        "push_to_hub": true
+    },
+    "mode": "record",
+    "device": "cuda"
+}
