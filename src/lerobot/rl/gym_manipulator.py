@@ -561,7 +561,7 @@ def control_loop(
     env: gym.Env,
     env_processor: DataProcessorPipeline[EnvTransition, EnvTransition],
     action_processor: DataProcessorPipeline[EnvTransition, EnvTransition],
-    teleop_device: Teleoperator,
+    teleop_device: Teleoperator | None,
     cfg: GymManipulatorConfig,
 ) -> None:
     """Main control loop for robot environment interaction.
@@ -571,7 +571,7 @@ def control_loop(
      env: The robot environment
      env_processor: Environment processor
      action_processor: Action processor
-     teleop_device: Teleoperator device
+     teleop_device: Teleoperator device (None for gym_hil environments)
      cfg: gym_manipulator configuration
     """
     dt = 1.0 / cfg.env.fps
@@ -599,7 +599,18 @@ def control_loop(
 
     dataset = None
     if cfg.mode == "record":
-        action_features = teleop_device.action_features
+        # Get action features from teleop device if available, otherwise derive from env action space
+        if teleop_device is not None:
+            action_features = teleop_device.action_features
+        else:
+            # For gym_hil environments, derive action features from environment action space
+            action_space = env.action_space
+            action_features = {
+                "dtype": action_space.dtype.name,  # Use .name to get string like "float32"
+                "shape": action_space.shape,
+                "names": None,
+            }
+
         features = {
             ACTION: action_features,
             REWARD: {"dtype": "float32", "shape": (1,), "names": None},

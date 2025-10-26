@@ -10,7 +10,8 @@
       "WebFetch(domain:github.com)",
       "Read(//home/cihan/lerobot-dev/**)",
       "Bash(chmod:*)",
-      "Bash(lerobot-record:*)"
+      "Bash(lerobot-record:*)",
+      "Read(//home/cihan/.local/lib/python3.10/site-packages/gym_hil/**)"
     ],
     "deny": [],
     "ask": []

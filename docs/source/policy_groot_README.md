@@ -1,3 +1,9 @@
+---
+noteId: "7afa5990b21511f0a9b1cb8d56441717"
+tags: []
+
+---
+
 ## Research Paper
 
 Paper: https://research.nvidia.com/labs/gear/gr00t-n1_5/

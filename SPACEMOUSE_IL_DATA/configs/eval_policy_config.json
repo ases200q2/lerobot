@@ -1,0 +1,60 @@
+{
+  "environment": {
+    "task": "PandaPickCubeBase-v0",
+    "fps": 10,
+    "render_mode": "human",
+    "image_obs": true,
+    "display_cameras": true
+  },
+  "evaluation": {
+    "n_episodes": 10,
+    "batch_size": 1,
+    "use_async_envs": false,
+    "timeout_steps": 500,
+    "success_threshold": 0.7
+  },
+  "policy": {
+    "pretrained_path": "YOUR_HF_USERNAME/panda_spacemouse_act_policy",
+    "device": "cuda"
+  },
+  "dataset": {
+    "repo_id": "YOUR_HF_USERNAME/panda_spacemouse_il_data",
+    "purpose": "Used to load dataset metadata for policy configuration"
+  },
+  "observation_preprocessing": {
+    "crop": [0, 0, 128, 128],
+    "resize": [128, 128],
+    "state_dim": 18,
+    "state_components": [
+      "joint_positions (7 dims)",
+      "joint_velocities (7 dims)",
+      "ee_pose (4 dims: position xyz + gripper)"
+    ]
+  },
+  "action_transformation": {
+    "policy_action_dim": 4,
+    "policy_action_components": ["delta_x", "delta_y", "delta_z", "gripper"],
+    "env_action_dim": 7,
+    "env_action_components": ["delta_x", "delta_y", "delta_z", "delta_rx", "delta_ry", "delta_rz", "gripper"],
+    "transformation": "Pad policy action (4-dim) with zeros for rotation to match env (7-dim)"
+  },
+  "visualization": {
+    "gui": true,
+    "show_opencv_windows": true,
+    "display_front_camera": true,
+    "display_wrist_camera": true,
+    "window_size": [512, 512]
+  },
+  "output": {
+    "save_videos": false,
+    "save_logs": true,
+    "output_dir": "outputs/eval/panda_spacemouse_eval"
+  },
+  "comments": {
+    "description": "Evaluation configuration for ACT policy on PandaPickCube simulation",
+    "environment_note": "Using PandaPickCubeBase-v0 instead of SpaceMouse variant to avoid teleop requirement during evaluation",
+    "observation_matching": "Observation preprocessing must match training data collection configuration",
+    "action_matching": "Action transformation handles the difference between policy output (4-dim) and environment input (7-dim)",
+    "extensibility": "Configuration designed to be adaptable to Isaac Sim environment with minimal changes"
+  }
+}
