@@ -35,7 +35,37 @@ from PIL import Image
 
 def get_safe_default_codec():
     if importlib.util.find_spec("torchcodec"):
-        return "torchcodec"
+        # Test if torchcodec is actually functional
+        try:
+            import os
+            import tempfile
+
+            from torchcodec.decoders import VideoDecoder
+
+            # Create a dummy file to test torchcodec functionality
+            with tempfile.NamedTemporaryFile(suffix=".mp4", delete=False) as f:
+                dummy_video = f.name
+                f.write(b"dummy video data")
+
+            try:
+                # Try to create a VideoDecoder to test compatibility
+                VideoDecoder(dummy_video, seek_mode="approximate")
+                return "torchcodec"
+            except Exception:
+                # torchcodec has compatibility issues, fall back to pyav
+                logging.warning(
+                    "'torchcodec' has compatibility issues with the current PyTorch version, falling back to 'pyav' as a default decoder"
+                )
+                return "pyav"
+            finally:
+                if os.path.exists(dummy_video):
+                    os.unlink(dummy_video)
+        except Exception:
+            # torchcodec import failed, fall back to pyav
+            logging.warning(
+                "'torchcodec' is not available in your platform, falling back to 'pyav' as a default decoder"
+            )
+            return "pyav"
     else:
         logging.warning(
             "'torchcodec' is not available in your platform, falling back to 'pyav' as a default decoder"
