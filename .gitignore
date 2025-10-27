@@ -188,3 +188,6 @@ outputs/
 
 # Local optional modules
 gym-hil/
+
+# GPU Monitoring
+GPU_MONITOR/
