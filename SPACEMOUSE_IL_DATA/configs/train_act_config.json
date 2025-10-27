@@ -1,0 +1,58 @@
+{
+  "policy": {
+    "type": "act",
+    "device": "cuda",
+    "chunk_size": 100,
+    "n_obs_steps": 1,
+    "dim_model": 256,
+    "n_heads": 8,
+    "dim_feedforward": 3200,
+    "n_encoder_layers": 4,
+    "n_decoder_layers": 1,
+    "dropout": 0.1,
+    "pre_norm": false,
+    "use_vae": true,
+    "latent_dim": 32,
+    "n_vae_encoder_layers": 4
+  },
+  "training": {
+    "batch_size": 32,
+    "steps": 100000,
+    "lr": 1e-5,
+    "lr_scheduler": "cosine",
+    "warmup_steps": 1000,
+    "grad_clip_norm": 10,
+    "weight_decay": 1e-4,
+    "offline_steps": 0,
+    "eval_freq": 10000,
+    "save_freq": 10000,
+    "log_freq": 100
+  },
+  "dataset": {
+    "repo_id": "YOUR_HF_USERNAME/panda_spacemouse_il_data",
+    "video_backend": "pyav",
+    "delta_timestamps": {
+      "action": [0.02, 0.04, 0.06, 0.08, 0.1, 0.12, 0.14, 0.16, 0.18, 0.2]
+    }
+  },
+  "output": {
+    "output_dir": "outputs/train/panda_spacemouse_act",
+    "job_name": "panda_spacemouse_act",
+    "push_to_hub": true,
+    "repo_id": "YOUR_HF_USERNAME/panda_spacemouse_act_policy"
+  },
+  "logging": {
+    "wandb_enable": false,
+    "wandb_project": "lerobot-panda-spacemouse",
+    "wandb_entity": null
+  },
+  "comments": {
+    "description": "ACT policy training configuration for PandaPickCubeSpacemouse-v0 imitation learning",
+    "task": "Pick and place cube using SpaceMouse demonstrations",
+    "policy_choice": "ACT (Action Chunking Transformer) - standard choice for imitation learning",
+    "image_preprocessing": "Images are cropped and resized to 128x128 as per data collection config",
+    "state_vector": "18-dim state: 7 joint positions + 7 joint velocities + 4 EE pose elements",
+    "action_space": "4-dim actions: delta XYZ position + gripper state",
+    "extensibility": "This configuration is designed to be compatible with Isaac Sim environment"
+  }
+}

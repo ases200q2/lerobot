@@ -14,7 +14,8 @@
       "Bash(curl:*)",
       "Bash(find:*)",
       "Bash(python3:*)",
-      "WebFetch(domain:arxiv.org)"
+      "WebFetch(domain:arxiv.org)",
+      "Read(//home/cihan/.local/lib/python3.10/site-packages/gym_hil/**)"
     ],
     "deny": [],
     "ask": []
