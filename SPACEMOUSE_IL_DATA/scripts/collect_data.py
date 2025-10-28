@@ -23,8 +23,9 @@ def check_spacemouse_connection():
     """Check if SpaceMouse is connected."""
     try:
         import hid
+
         devices = hid.enumerate()
-        spacemouse_found = any('3Dconnexion' in str(d) or 'SpaceMouse' in str(d) for d in devices)
+        spacemouse_found = any("3Dconnexion" in str(d) or "SpaceMouse" in str(d) for d in devices)
         if spacemouse_found:
             logging.info("✓ SpaceMouse device detected")
             return True
@@ -42,6 +43,7 @@ def check_gpu_availability():
     """Check if GPU is available."""
     try:
         import torch
+
         if torch.cuda.is_available():
             logging.info(f"✓ GPU available: {torch.cuda.get_device_name(0)}")
             return True
@@ -53,26 +55,30 @@ def check_gpu_availability():
         return False
 
 
-def update_config(config_path, episodes=None, repo_id=None, device=None):
+def update_config(config_path, episodes=None, repo_id=None, device=None, random_cube=None):
     """Update configuration file with command-line arguments."""
-    with open(config_path, 'r') as f:
+    with open(config_path) as f:
         config = json.load(f)
 
     if episodes is not None:
-        config['dataset']['num_episodes_to_record'] = episodes
+        config["dataset"]["num_episodes_to_record"] = episodes
         logging.info(f"  Updated num_episodes to: {episodes}")
 
     if repo_id is not None:
-        config['dataset']['repo_id'] = repo_id
+        config["dataset"]["repo_id"] = repo_id
         logging.info(f"  Updated repo_id to: {repo_id}")
 
     if device is not None:
-        config['device'] = device
+        config["device"] = device
         logging.info(f"  Updated device to: {device}")
+
+    if random_cube is not None:
+        config["env"]["random_block_position"] = random_cube
+        logging.info(f"  Updated random_block_position to: {random_cube}")
 
     # Save updated config to temporary file
     temp_config_path = config_path.parent / f"temp_{config_path.name}"
-    with open(temp_config_path, 'w') as f:
+    with open(temp_config_path, "w") as f:
         json.dump(config, f, indent=2)
 
     return temp_config_path, config
@@ -80,9 +86,7 @@ def update_config(config_path, episodes=None, repo_id=None, device=None):
 
 def main():
     """Main data collection function."""
-    parser = argparse.ArgumentParser(
-        description="Collect demonstration data using SpaceMouse teleoperation"
-    )
+    parser = argparse.ArgumentParser(description="Collect demonstration data using SpaceMouse teleoperation")
     parser.add_argument(
         "--config",
         type=str,
@@ -105,7 +109,7 @@ def main():
         "--device",
         type=str,
         default=None,
-        choices=['cuda', 'cpu', 'mps'],
+        choices=["cuda", "cpu", "mps"],
         help="Device to use (overrides config)",
     )
     parser.add_argument(
@@ -113,18 +117,25 @@ def main():
         action="store_true",
         help="Skip pre-flight checks",
     )
+    parser.add_argument(
+        "--random_cube",
+        action="store_true",
+        help="Enable random cube positioning",
+    )
+    parser.add_argument(
+        "--auto_start",
+        action="store_true",
+        help="Skip user input and start immediately",
+    )
 
     args = parser.parse_args()
 
     # Setup logging
-    logging.basicConfig(
-        level=logging.INFO,
-        format='%(asctime)s - %(levelname)s - %(message)s'
-    )
+    logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 
-    print("\n" + "="*70)
+    print("\n" + "=" * 70)
     print("  SpaceMouse Data Collection for PandaPickCubeSpacemouse-v0")
-    print("="*70 + "\n")
+    print("=" * 70 + "\n")
 
     # Resolve config path
     config_path = Path(args.config)
@@ -151,27 +162,29 @@ def main():
         config_path,
         episodes=args.episodes,
         repo_id=args.repo_id,
-        device=args.device
+        device=args.device,
+        random_cube=args.random_cube if args.random_cube else None,
     )
 
     # Display collection parameters
     print("\n--- Data Collection Parameters ---")
     print(f"  Environment: {config.get('env', {}).get('task', 'PandaPickCubeSpacemouse-v0')}")
-    print(f"  Episodes: {config.get('dataset', {}).get('num_episodes_to_record', 30)}")
+    print(f"  Episodes: {config.get('dataset', {}).get('num_episodes_to_record', 50)}")
     print(f"  FPS: {config.get('env', {}).get('fps', 10)}")
     print(f"  Device: {config.get('device', 'cuda')}")
+    print(f"  Random Cube Position: {config.get('env', {}).get('random_block_position', False)}")
     print(f"  Repository: {config.get('dataset', {}).get('repo_id', 'YOUR_HF_USERNAME/dataset')}")
     print(f"  Push to Hub: {config.get('dataset', {}).get('push_to_hub', True)}")
     print("----------------------------------\n")
 
     # Check if repo_id needs to be updated
-    repo_id = config.get('dataset', {}).get('repo_id', '')
-    if repo_id.startswith('YOUR_HF_USERNAME'):
+    repo_id = config.get("dataset", {}).get("repo_id", "")
+    if repo_id.startswith("YOUR_HF_USERNAME"):
         print("⚠ WARNING: repo_id contains 'YOUR_HF_USERNAME'")
         print("  Please update the repo_id in the config file or use --repo_id flag")
         print("  Example: --repo_id username/panda_spacemouse_il_data\n")
         response = input("Continue anyway? [y/N]: ")
-        if response.lower() != 'y':
+        if response.lower() != "y":
             logging.info("Aborted by user")
             sys.exit(0)
 
@@ -188,12 +201,7 @@ def main():
     input("Press Enter to start data collection...")
 
     # Build the command to run gym_manipulator
-    cmd = [
-        "python",
-        "-m",
-        "lerobot.rl.gym_manipulator",
-        f"--config_path={temp_config_path.absolute()}"
-    ]
+    cmd = ["python", "-m", "lerobot.rl.gym_manipulator", f"--config_path={temp_config_path.absolute()}"]
 
     logging.info(f"Running command: {' '.join(cmd)}\n")
 
@@ -201,12 +209,12 @@ def main():
         # Run the data collection
         subprocess.run(cmd, check=True, cwd=config_path.parent.parent.parent)
 
-        print("\n" + "="*70)
+        print("\n" + "=" * 70)
         print("  Data Collection Completed Successfully!")
-        print("="*70)
+        print("=" * 70)
 
-        repo_id = config.get('dataset', {}).get('repo_id', '')
-        push_to_hub = config.get('dataset', {}).get('push_to_hub', False)
+        repo_id = config.get("dataset", {}).get("repo_id", "")
+        push_to_hub = config.get("dataset", {}).get("push_to_hub", False)
 
         if push_to_hub and repo_id:
             print(f"\n✓ Dataset uploaded to: https://huggingface.co/datasets/{repo_id}")

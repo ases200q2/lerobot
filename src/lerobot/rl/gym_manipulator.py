@@ -126,7 +126,7 @@ class RobotEnv(gym.Env):
         use_gripper: bool = False,
         display_cameras: bool = False,
         reset_pose: list[float] | None = None,
-        reset_time_s: float = 5.0,
+        reset_time_s: float = 10.0,
     ) -> None:
         """Initialize robot environment with configuration options.
 
@@ -316,12 +316,16 @@ def make_robot_env(cfg: HILSerlRobotEnvConfig) -> tuple[gym.Env, Any]:
         use_gripper = cfg.processor.gripper.use_gripper if cfg.processor.gripper is not None else True
         gripper_penalty = cfg.processor.gripper.gripper_penalty if cfg.processor.gripper is not None else 0.0
 
+        # Extract random block position setting
+        random_block_position = getattr(cfg, "random_block_position", False)
+
         env = gym.make(
             f"gym_hil/{cfg.task}",
             image_obs=True,
             render_mode="human",
             use_gripper=use_gripper,
             gripper_penalty=gripper_penalty,
+            random_block_position=random_block_position,
         )
 
         return env, None
@@ -536,12 +540,20 @@ def step_env_and_process_transition(
 
     obs, reward, terminated, truncated, info = env.step(processed_action)
 
+    # DEBUG: Check if teleop_action is in info from env.step()
+    if "teleop_action" in info:
+        print(f"[STEP_ENV] env.step() returned info with teleop_action: {info['teleop_action']}")
+
     reward = reward + processed_action_transition[TransitionKey.REWARD]
     terminated = terminated or processed_action_transition[TransitionKey.DONE]
     truncated = truncated or processed_action_transition[TransitionKey.TRUNCATED]
     complementary_data = processed_action_transition[TransitionKey.COMPLEMENTARY_DATA].copy()
     new_info = processed_action_transition[TransitionKey.INFO].copy()
     new_info.update(info)
+
+    # DEBUG: Check if teleop_action is still in new_info after update
+    if "teleop_action" in new_info:
+        print(f"[STEP_ENV] new_info has teleop_action: {new_info['teleop_action']}")
 
     new_transition = create_transition(
         observation=obs,
@@ -553,6 +565,15 @@ def step_env_and_process_transition(
         complementary_data=complementary_data,
     )
     new_transition = env_processor(new_transition)
+
+    # DEBUG: Check if teleop_action survived the env_processor
+    if "teleop_action" in new_transition.get(TransitionKey.INFO, {}):
+        print(
+            f"[STEP_ENV] After env_processor, info has teleop_action: {new_transition[TransitionKey.INFO]['teleop_action']}"
+        )
+    else:
+        print("[STEP_ENV] WARNING: teleop_action NOT in info after env_processor!")
+        print(f"[STEP_ENV] INFO keys: {new_transition.get(TransitionKey.INFO, {}).keys()}")
 
     return new_transition
 
@@ -672,15 +693,44 @@ def control_loop(
         truncated = transition.get(TransitionKey.TRUNCATED, False)
 
         if cfg.mode == "record":
+            # DEBUG: Print what's in the transition
+            print(f"\n[RECORD DEBUG] Episode step {episode_step}")
+            print(f"[RECORD DEBUG] INFO keys: {transition.get(TransitionKey.INFO, {}).keys()}")
+            print(
+                f"[RECORD DEBUG] COMPLEMENTARY_DATA keys: {transition.get(TransitionKey.COMPLEMENTARY_DATA, {}).keys()}"
+            )
+            if "teleop_action" in transition.get(TransitionKey.INFO, {}):
+                print(
+                    f"[RECORD DEBUG] INFO has teleop_action: {transition[TransitionKey.INFO]['teleop_action']}"
+                )
+            if "teleop_action" in transition.get(TransitionKey.COMPLEMENTARY_DATA, {}):
+                print(
+                    f"[RECORD DEBUG] COMPLEMENTARY_DATA has teleop_action: {transition[TransitionKey.COMPLEMENTARY_DATA]['teleop_action']}"
+                )
+
             observations = {
                 k: v.squeeze(0).cpu()
                 for k, v in transition[TransitionKey.OBSERVATION].items()
                 if isinstance(v, torch.Tensor)
             }
-            # Use teleop_action if available, otherwise use the action from the transition
-            action_to_record = transition[TransitionKey.COMPLEMENTARY_DATA].get(
-                "teleop_action", transition[TransitionKey.ACTION]
-            )
+            # Use teleop_action if available (from real robot or gym_hil environments)
+            # For gym_hil, it's in info (priority); for real robots, it's in complementary_data
+            # Check INFO first since gym_hil stores the real action there
+            action_to_record = transition[TransitionKey.INFO].get("teleop_action")
+            if action_to_record is None:
+                action_to_record = transition[TransitionKey.COMPLEMENTARY_DATA].get("teleop_action")
+            if action_to_record is None:
+                action_to_record = transition[TransitionKey.ACTION]
+
+            print(f"[GYM_MANIPULATOR] Using action: {action_to_record}")
+
+            # Convert to tensor if it's a numpy array
+            if isinstance(action_to_record, np.ndarray):
+                action_to_record = torch.from_numpy(action_to_record)
+
+            # DEBUG: Print what will be recorded
+            if episode_step % 10 == 0:  # Print every 10 steps to avoid spam
+                print(f"[GYM_MANIPULATOR] Recording action (step {episode_step}): {action_to_record}")
             frame = {
                 **observations,
                 ACTION: action_to_record.cpu(),

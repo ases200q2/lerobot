@@ -20,7 +20,7 @@ PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
 
 # Default values
 CONFIG_FILE="$PROJECT_DIR/configs/collect_data_config.json"
-NUM_EPISODES="${1:-30}"  # Default to 30 episodes
+NUM_EPISODES="${1:-5}"  # Default to 5 episodes
 REPO_ID="${2:-}"         # Optional HuggingFace repo ID
 
 # Colors for output

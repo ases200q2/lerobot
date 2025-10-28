@@ -219,6 +219,7 @@ class HILSerlRobotEnvConfig(EnvConfig):
     processor: HILSerlProcessorConfig = field(default_factory=HILSerlProcessorConfig)
 
     name: str = "real_robot"
+    random_block_position: bool = False
 
     @property
     def gym_kwargs(self) -> dict:

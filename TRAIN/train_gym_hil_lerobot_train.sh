@@ -8,9 +8,9 @@ date_suffix=$(date +"%Y%m%d_%H%M%S")
 
 # Training configuration
 policy_type="act"
-dataset_id="ases200q2/PandaPickCubeSpacemouse_v30.5"
-output_dir="outputs/train/PandaPickCubeSpacemouse_v30.5_ACT_test_$date_suffix"
-job_name="PandaPickCubeSpacemouse_v30.5_ACT_test_$date_suffix"
+dataset_id="ases200q2/PandaPickCubeSpacemouse_E50"
+output_dir="outputs/train/PandaPickCubeSpacemouse_E50_ACT_test_$date_suffix"
+job_name="PandaPickCubeSpacemouse_E50_ACT_test_$date_suffix"
 steps=20000
 batch_size=64  # Increased from 32
 num_workers=8  # Increased from 4 to improve dataloading and GPU utilization

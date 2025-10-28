@@ -4,6 +4,7 @@
   "env": {
     "task": "PandaPickCubeSpacemouse-v0",
     "fps": 10,
+    "random_block_position": true,
     "features": {
       "observation.images.front": {
         "type": "VISUAL",
@@ -51,7 +52,7 @@
       },
       "reset": {
         "fixed_reset_joint_positions": [0.0, 0.195, 0.0, -2.43, 0.0, 2.62, 0.785],
-        "reset_time_s": 5.0,
+        "reset_time_s": 20.0,
         "control_time_s": 20.0,
         "terminate_on_success": false
       },
@@ -61,11 +62,12 @@
     }
   },
   "dataset": {
-    "repo_id": "ases200q2/PandaPickCubeSpacemouseRandom2_il_data",
+    "repo_id": "ases200q2/PandaPickCubeSpacemouse_E50"
+    ,
     "task": "PandaPickCubeBase-v0",
     "root": null,
-    "num_episodes_to_record": 30,
+    "num_episodes_to_record": 50,
     "replay_episode": null,
-    "push_to_hub": false
+    "push_to_hub": true
   }
 }
