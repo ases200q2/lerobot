@@ -1,0 +1,18 @@
+{
+  "env": {
+    "name": "gym_hil",
+    "task": "PandaPickCubeGamepad-v0",
+    "processor": {
+      "control_mode": "gamepad"
+    }
+  },
+  "dataset": {
+    "repo_id": "ases200q2/sim_dataset",
+    "root": null,
+    "task": "pick_cube",
+    "num_episodes_to_record": 1,
+    "replay_episode": null,
+    "push_to_hub": true
+  },
+  "mode": "record"
+}

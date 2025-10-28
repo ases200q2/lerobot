@@ -322,6 +322,7 @@ def make_robot_env(cfg: HILSerlRobotEnvConfig) -> tuple[gym.Env, Any]:
             render_mode="human",
             use_gripper=use_gripper,
             gripper_penalty=gripper_penalty,
+            random_block_position=False,
         )
 
         return env, None
@@ -599,7 +600,23 @@ def control_loop(
 
     dataset = None
     if cfg.mode == "record":
-        action_features = teleop_device.action_features
+        # Derive action feature spec depending on environment/teleop availability
+        if teleop_device is not None:
+            action_features = teleop_device.action_features
+        else:
+            # In gym_hil, teleoperation is handled inside the env wrappers, so infer from env.action_space
+            if isinstance(env.action_space, gym.spaces.Box):
+                action_features = {
+                    "dtype": str(env.action_space.dtype) if hasattr(env.action_space, "dtype") else "float32",
+                    "shape": env.action_space.shape,
+                    "names": None,
+                }
+                # Normalize dtype representation for dataset schema
+                if action_features["dtype"] not in {"float32", "float64", "int64", "int32"}:
+                    action_features["dtype"] = "float32"
+            else:
+                # Sensible fallback
+                action_features = {"dtype": "float32", "shape": (4,), "names": None}
         features = {
             ACTION: action_features,
             REWARD: {"dtype": "float32", "shape": (1,), "names": None},
