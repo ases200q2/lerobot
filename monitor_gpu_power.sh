@@ -16,3 +16,5 @@ while true; do
     nvidia-smi --query-gpu=timestamp,name,power.draw,power.limit,utilization.gpu,utilization.memory,temperature.gpu,memory.used,memory.total --format=csv,noheader,nounits >> "$LOG_FILE"
     sleep 1
 done
+
+
